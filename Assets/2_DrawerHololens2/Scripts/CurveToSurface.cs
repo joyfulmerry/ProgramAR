@@ -25,7 +25,9 @@ public class CurveToSurface : MonoBehaviour, IMixedRealityPointerHandler
     //值为0时多笔画模式，值为1时单笔画模式
     int singleCurveMode = 0;
 
+    //统计已画表面数
     int surfaceCount = 1;
+
 
     List<Vector3> ReadOneCurvePointFromFile()
     {
@@ -58,13 +60,27 @@ public class CurveToSurface : MonoBehaviour, IMixedRealityPointerHandler
             float y = float.Parse(result[1]);
             float z = float.Parse(result[2]);
             Debug.Log(content);
-            line1List.Add(new Vector3(x, y, z));
+            if (line1List.Count > 0)
+            {
+                float lastx = line1List[line1List.Count - 1].x, lasty = line1List[line1List.Count - 1].y, lastz = line1List[line1List.Count - 1].z;
+                if (lastx == x && lasty == y && lastz == z)
+                { }
+                else
+                {
+                    line1List.Add(new Vector3(x, y, z));
+                }
+            }
+            else
+            {
+                line1List.Add(new Vector3(x, y, z));
+            }
         }
         reader.Close();
         stream.Close();
 
         stream = new FileStream(sidePointsPath, FileMode.Open);
         reader = new StreamReader(stream);
+        int isFirstVertice = 1;
         while (!reader.EndOfStream)
         {
             var content = reader.ReadLine();
@@ -72,7 +88,21 @@ public class CurveToSurface : MonoBehaviour, IMixedRealityPointerHandler
             float x = float.Parse(result[0]);
             float y = float.Parse(result[1]);
             float z = float.Parse(result[2]);
-            sidePointsList.Add(new Vector3(x, y, z));
+
+            if (sidePointsList.Count > 0)
+            {
+                float lastx = sidePointsList[sidePointsList.Count - 1].x, lasty = sidePointsList[sidePointsList.Count - 1].y, lastz = sidePointsList[sidePointsList.Count - 1].z;
+                if (lastx == x && lasty == y && lastz == z)
+                { }
+                else
+                {
+                    sidePointsList.Add(new Vector3(x, y, z));
+                }
+            }
+            else
+            {
+                sidePointsList.Add(new Vector3(x, y, z));
+            }
         }
 
         float d1, d2;
@@ -87,8 +117,6 @@ public class CurveToSurface : MonoBehaviour, IMixedRealityPointerHandler
 
     void Awake() {
         pathBase = Application.persistentDataPath+"\\";
-        //Debug.Log(pathBase + surfaceCount * 2 + ".txt");
-        //DrawSurface();
     }
     void Update()
     {
@@ -104,10 +132,12 @@ public class CurveToSurface : MonoBehaviour, IMixedRealityPointerHandler
     }
     void DrawSurface()
     {
-        //GameObject gameObject = new GameObject("1");
-        gameObject.AddComponent<MeshFilter>();
-        gameObject.AddComponent<MeshRenderer>();
-        
+        GameObject surface = new GameObject("Surface"+surfaceCount);
+        surface.AddComponent<MeshFilter>();
+        surface.AddComponent<MeshRenderer>();
+
+        Mesh surfaceMesh = new Mesh();
+        surface.GetComponent<MeshFilter>().mesh = surfaceMesh;
         List<Vector3> line1List = new List<Vector3>();
         List<Vector3> line2List = new List<Vector3>();
         List<Vector3> line3List = new List<Vector3>();
@@ -122,16 +152,12 @@ public class CurveToSurface : MonoBehaviour, IMixedRealityPointerHandler
             ReadMultiCurvePointFromFile(line1List,sidePointsList);
             AllocateSidePoints(sidePointsList,line2List,line3List);
         }
-        Generate(line1List, line2List, line3List);
-        CreatePointCloud(line1List, "line1");
-        CreatePointCloud(line2List, "line2");
-        CreatePointCloud(line3List, "line3");
+        Generate(surface, line1List, line2List, line3List);
+        CreatePointCloud(line1List, "Surface"+surfaceCount+": "+"Line1");
+        CreatePointCloud(line2List, "Surface" + surfaceCount + ": " + "Line2");
+        CreatePointCloud(line3List, "Surface"+surfaceCount+": "+"Line3");
         Material mat = (Material)Resources.Load<Material>("Mountain");
-//#if UNITY_EDITOR
-//        mat = (Material)AssetDatabase.LoadAssetAtPath("Assets/Mountain.mat", typeof(Material));
-//#endif
-        GetComponent<Renderer>().material = mat;
-        //gameObject.transform.Rotate(-90,0,0, Space.World);
+        surface.GetComponent<Renderer>().material = mat;
     }
     // Start is called before the first frame update
     void Start()
@@ -142,11 +168,6 @@ public class CurveToSurface : MonoBehaviour, IMixedRealityPointerHandler
     void OndrawGizmos()
     {
 
-    }
-    void AllocatePoint(List<Vector3>[] pointsLists, List<Vector3> line1List, List<Vector3> line2List, List<Vector3> line3List) {
-        line1List = pointsLists[0];
-
-    
     }
     void AllocatePoint(List<Vector3> pointsList, List<Vector3> line1List, List<Vector3> line2List, List<Vector3> line3List)
     {
@@ -351,7 +372,7 @@ public class CurveToSurface : MonoBehaviour, IMixedRealityPointerHandler
         return points;
     }
 
-    void Generate(List<Vector3> line1List, List<Vector3> line2List, List<Vector3> line3List)
+    void Generate(GameObject surface, List<Vector3> line1List, List<Vector3> line2List, List<Vector3> line3List)
     {
         int lineSize1 = line1List.Count, lineSize2 = line2List.Count, lineSize3 = line3List.Count;
         Vector3[] line1 = line1List.ToArray();
@@ -364,7 +385,7 @@ public class CurveToSurface : MonoBehaviour, IMixedRealityPointerHandler
         GetVertices(vertices, line1, line2, line3);
 
         //构建三角形
-        GetTriangles(vertices, line1, line2, line3);
+        GetTriangles(surface, vertices, line1, line2, line3);
 
     }
     void GetVertices(Vector3[] vertices, Vector3[] line1, Vector3[] line2, Vector3[] line3)
@@ -399,59 +420,6 @@ public class CurveToSurface : MonoBehaviour, IMixedRealityPointerHandler
 
     }
 
-    Vector3 getSimilarVertice(Vector3 lastVertice, Vector3 B, Vector3 C) {
-        float x1 = lastVertice.x, y1 = lastVertice.y, z1 = lastVertice.z;
-        float x2 = B.x, y2 = B.y, z2 = B.z;
-        float x3 = C.x, y3 = C.y, z3 = C.z;
-        float xMid, yMid, zMid;
-        float x, y, z;
-        xMid = (x1 + x2 + x3) / 3;
-        yMid = (y1 + y2 + y3) / 3;
-        zMid = (z1 + z2 + z3) / 3;
-
-        Vector3 verticeY = new Vector3(xMid, (B.y + C.y) / 2, zMid);
-        Vector3 verticeX = new Vector3((B.x + C.x) / 2, yMid, zMid);
-        Vector3 verticeZ = new Vector3(xMid, yMid, (B.z + C.z) / 2);
-
-        float d12Y = Vector3.Distance(B, verticeY);
-        float d13Y = Vector3.Distance(C, verticeY);
-        float d12X = Vector3.Distance(B, verticeX);
-        float d13X = Vector3.Distance(C, verticeX);
-        float d12Z = Vector3.Distance(B, verticeZ);
-        float d13Z = Vector3.Distance(C, verticeZ);
-        if (y2 > y3)
-        {
-            y = y3 + (y2 - y3) * d13Y / (d12Y + d13Y);
-        }
-        else
-        {
-
-            y = y2 + (y3 - y2) * d12Y / (d12Y + d13Y);
-        }
-
-        if (x2 > x3)
-        {
-            x = x3 + (x2 - x3) * d13X / (d12X + d13X);
-        }
-        else
-        {
-
-            x = x2 + (x3 - x2) * d12X / (d12X + d13X);
-        }
-
-        if (z2 > z3)
-        {
-            z = z3 + (z2 - z3) * d13Z / (d12Z + d13Z);
-        }
-        else
-        {
-
-            z = z2 + (z3 - z2) * d12Z / (d12Z + d13Z);
-        }
-        Debug.Log("(" + x1 + ", " + y1 + ", " + z1 + "), " + "(" + x2 + ", " + y2 + ", " + z2 + "), " + "(" + x3 + ", " + y3 + ", " + z3 + "), " + "(" + x + ", " + y + ", " + z + ")");
-        return new Vector3(x, y, z);
-
-    }
     Vector3 getSimilarVertice(Vector3 lastVertice, Vector3 B, Vector3 C, Vector3 lastB, Vector3 lastC)
     {
         float x, y, z;
@@ -467,21 +435,26 @@ public class CurveToSurface : MonoBehaviour, IMixedRealityPointerHandler
         else {
             x = (x2 + x3) / 2;
         }
-        if (Y3 != Y2)
-            y = (y3 * (y1 - Y2) - y2 * (y1 - Y3)) / (Y3 - Y2);
-        else {
-            y = (y2 + y3) / 2;
-        }
         if (Z3 != Z2)
             z = (z3 * (z1 - Z2) - z2 * (z1 - Z3)) / (Z3 - Z2);
         else {
             z = (z2 + z3) / 2;
         }
-            
+
+        float d2 = Vector3.Distance(new Vector3(x, 0, z), new Vector3(x2, 0, z2));
+        float d3 = Vector3.Distance(new Vector3(x, 0, z), new Vector3(x3, 0, z3));
+        if (y3 > y2)
+        {
+            y = d2 * (y3 - y2) / (d2 + d3) + y2;
+        }
+        else
+        {
+            y = d3 * (y2 - y3) / (d3 + d2) + y3;
+        }
         return new Vector3(x, y, z);
 
     }
-    void GetTriangles(Vector3[] vertices, Vector3[] line1, Vector3[] line2, Vector3[] line3)
+    void GetTriangles(GameObject surface, Vector3[] vertices, Vector3[] line1, Vector3[] line2, Vector3[] line3)
     {
         for (int i = 0; i < vertices.Length; i++)
         {
@@ -493,10 +466,10 @@ public class CurveToSurface : MonoBehaviour, IMixedRealityPointerHandler
         int lineSize1 = line1.Length;
         int lineSize2 = line2.Length;
         int xSize = lineSize1, zSize = lineSize2;
-        Mesh mesh = GetComponent<MeshFilter>().mesh;
+        Mesh mesh = surface.GetComponent<MeshFilter>().mesh;
 
         List<Vector3> verticeList = new List<Vector3>(vertices);
-        CreatePointCloud(verticeList,"MyMesh");
+        CreatePointCloud(verticeList, "Surface" + surfaceCount + ": " + "MyMesh");
 
         mesh.vertices = vertices;
         int numOfTri = (xSize - 1) * (zSize - 2) * 2 + xSize - 1;
