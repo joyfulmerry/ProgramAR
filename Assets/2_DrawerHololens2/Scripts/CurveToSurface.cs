@@ -530,6 +530,22 @@ public class CurveToSurface : MonoBehaviour, IMixedRealityPointerHandler
         meshNeed.SetIndices(indecies, MeshTopology.Points, 0);
 
     }
+    public List<int> GetMinIndex(List<Vector3> pointsList)
+    {
+        List<int> minIndexList = new List<int>();
+
+        for (int i = 0; i < pointsList.Count - 1; i++)
+        {
+
+        }
+        return null;
+
+    }
+
+    public List<int> GetMaxIndex()
+    {
+        return null;
+    }
 
     public void OnPointerDown(MixedRealityPointerEventData eventData)
     {
