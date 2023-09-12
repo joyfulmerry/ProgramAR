@@ -217,6 +217,7 @@ GameObject:
   m_Component:
   - component: {fileID: 52565019}
   - component: {fileID: 52565020}
+  - component: {fileID: 52565021}
   m_Layer: 0
   m_Name: GameObject
   m_TagString: Untagged
@@ -250,6 +251,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5a88b18b886e69248a7b9690e2e6c5ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &52565021
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 52565018}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b3f20855254f0248beda66b9863b421, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  grassMat: {fileID: 2100000, guid: bd6d02eb25769ea4c8da44c7caccd45b, type: 2}
 --- !u!1 &65271663
 GameObject:
   m_ObjectHideFlags: 0

@@ -6,22 +6,26 @@ public class GenerateGrass : MonoBehaviour
 {
     public Material grassMat;
 
+    int index = 1;
+
     // Start is called before the first frame update
     void Start()
     {
-        Generate(FilterVertice(gameObject.GetComponent<MeshFilter>().sharedMesh.vertices));
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+        if(GameObject.Find("Surface"+index.ToString())!=null){
+            Generate(FilterVertice(GameObject.Find("Surface"+index.ToString()).GetComponent<MeshFilter>().sharedMesh.vertices));
+            index++;
+        }
     }
 
     //根据mesh上的顶点生成草的位置
     Vector3[] FilterVertice(Vector3[] vertices){
         List<Vector3> roots = new List<Vector3>();
-        int[] triangles = gameObject.GetComponent<MeshFilter>().sharedMesh.triangles;
+        int[] triangles = GameObject.Find("Surface"+index.ToString()).GetComponent<MeshFilter>().sharedMesh.triangles;
 
         //计算mesh上三角形的平均面积
         float avg_area = 0.0f;

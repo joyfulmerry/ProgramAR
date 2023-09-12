@@ -3,8 +3,8 @@
 
 		_MainTex("Albedo (RGB)", 2D) = "white" {}
 		_AlphaTex("Alpha (A)", 2D) = "white" {}
-		_Height("Grass Height", float) = 3
-		_Width("Grass Width", range(0, 0.1)) = 0.05
+		_Height("Grass Height", float) = 0.02
+		_Width("Grass Width", range(0, 0.001)) = 0.0005
 
 	}
 	SubShader{
@@ -85,8 +85,8 @@
 			float random = sin(UNITY_HALF_PI * frac(root.x) + UNITY_HALF_PI * frac(root.z));
 
 
-			_Width = _Width + (random / 50);
-			_Height = _Height +(random / 5);
+			_Width = _Width + (random / 5000);
+			_Height = _Height +(random / 100);
 
 
 			g2f v[vertexCount] = {
@@ -108,7 +108,7 @@
 
 			for (int i = 0; i < vertexCount; i++)
 			{
-				v[i].norm = float3(0, 0, 1);
+				v[i].norm = float3(1, 0, 0);
 
 				if (fmod(i , 2) == 0)
 				{ 
@@ -144,8 +144,8 @@
 
 				float windForce = length(wind);
 
-				v[i].pos.xz += wind.xy * windCoEff;
-				v[i].pos.y -= windForce * windCoEff * 0.8;
+				v[i].pos.xz += wind.xy * windCoEff / 100;
+				v[i].pos.y -= windForce * windCoEff * 0.8 / 100;
 
 				v[i].pos = UnityObjectToClipPos(v[i].pos);
 
