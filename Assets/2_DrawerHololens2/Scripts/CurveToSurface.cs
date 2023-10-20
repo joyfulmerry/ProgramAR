@@ -36,7 +36,7 @@ public class CurveToSurface : MonoBehaviour, IMixedRealityPointerHandler
     {
         if (File.Exists(pathBase + surfaceCount + ".txt"))
         {
-            filePath = pathBase + surfaceCount + ".txt";
+            
             //Debug.Log(bottomPointsPath);
             DrawSurfaceWithDP();
             surfaceCount++;
@@ -57,6 +57,11 @@ public class CurveToSurface : MonoBehaviour, IMixedRealityPointerHandler
 
     //使用动态规划对获得的曲线生成曲面
     void DrawSurfaceWithDP(){
+        
+        filePath = pathBase + surfaceCount + ".txt";
+        areas = new Dictionary<string, double>();
+        triangleList = new List<string>();
+
         GameObject surface = new GameObject("Surface" + surfaceCount);
         surface.AddComponent<MeshFilter>();
         surface.AddComponent<MeshRenderer>();
